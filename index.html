@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M-usul — chiziqli dasturlash masalasini yechish</title>
+<style>
+:root{--bg:#f6f8fb;--fg:#14202e;--mut:#5d6b7a;--card:#fff;--bd:#cfd8e3;--ac:#1f4fbf;--hl:#ffe9a6;--col:#e3ecff;--ok:#17703a;--er:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#10161e;--fg:#e6edf5;--mut:#93a1b1;--card:#18212c;--bd:#2e3b4a;--ac:#8fb0ff;--hl:#6b5600;--col:#1f3052;--ok:#6fd08c;--er:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,"Times New Roman",serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;margin:0 0 .5em}
+p.s{color:var(--mut);margin:0 0 1em}
+section,.step{background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:14px 16px;margin:14px 0}
+.step h2 small{color:var(--mut);font-weight:400}
+label{font-family:system-ui,sans-serif;font-size:.9rem}
+input,select,button{font:inherit;font-family:system-ui,sans-serif;font-size:.95rem;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:5px 7px}
+input.n{width:64px;text-align:center}
+button{cursor:pointer;background:var(--ac);color:#fff;border-color:var(--ac);padding:7px 14px}
+button.g{background:transparent;color:var(--ac)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:6px 0}
+.grid{display:grid;gap:6px;align-items:center;overflow-x:auto;padding-bottom:4px}
+.w{overflow-x:auto}
+table{border-collapse:collapse;font-family:system-ui,sans-serif;font-size:.9rem;margin:8px 0}
+th,td{border:1px solid var(--bd);padding:4px 9px;text-align:center;white-space:nowrap}
+th{background:var(--bg)}
+td.ec,th.ec{background:var(--col)}
+tr.lr td{background:var(--col)}
+td.p{background:var(--hl);font-weight:700}
+tr.d td{font-weight:600;border-top:2px solid var(--fg)}
+.ok{color:var(--ok)}.er{color:var(--er)}
+.ans{font-size:1.1rem}
+sub{font-size:.7em}
+</style>
+</head>
+<body>
+<main>
+<h1>M-usul (sunʼiy bazis usuli)</h1>
+<p class="s">Chiziqli dasturlash masalasini kiriting — dastur har bir simpleks jadvalni va qarorni qadamma-qadam koʻrsatadi.</p>
+
+<section>
+<div class="row">
+<label>Oʻzgaruvchilar soni <input id="n" class="n" type="number" min="1" max="8" value="2"></label>
+<label>Cheklovlar soni <input id="m" class="n" type="number" min="1" max="8" value="3"></label>
+<label>Maqsad <select id="mx"><option value="min">Z → min</option><option value="max">Z → max</option></select></label>
+<button class="g" id="mk">Jadvalni yangilash</button>
+<button class="g" id="ex">Namuna</button>
+</div>
+<div id="form" class="grid"></div>
+<div class="row"><button id="go">Yechish</button><span id="err" class="er"></span></div>
+<p class="s">Koeffitsiyentlarni butun, kasr (1/2) yoki oʻnli (0.5) koʻrinishda yozing.</p>
+</section>
+<div id="out"></div>
+</main>
+<script>
+/* ---- Kasrlar: [surat, maxraj] ---- */
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b)[a,b]=[b,a%b];return a||1};
+const Q=(n,d=1)=>{if(d<0){n=-n;d=-d}const g=gcd(n,d);return[n/g,d/g]};
+const qa=(x,y)=>Q(x[0]*y[1]+y[0]*x[1],x[1]*y[1]);
+const qm=(x,y)=>Q(x[0]*y[0],x[1]*y[1]);
+const qn=x=>[-x[0],x[1]];
+const qd=(x,y)=>Q(x[0]*y[1],x[1]*y[0]);
+const qc=(x,y)=>x[0]*y[1]-y[0]*x[1];
+const q0=x=>x[0]===0;
+const qs=x=>x[1]===1?String(x[0]):x[0]+"/"+x[1];
+const Z0=Q(0);
+/* ---- a + bM ko'rinishidagi sonlar: [a, b] ---- */
+const ma=(x,y)=>[qa(x[0],y[0]),qa(x[1],y[1])];
+const ms=(x,q)=>[qm(x[0],q),qm(x[1],q)];
+const mneg=x=>[qn(x[0]),qn(x[1])];
+const mc=(x,y)=>qc(x[1],y[1])||qc(x[0],y[0]);
+function mstr(x){
+  const[a,b]=x;if(q0(b))return qs(a);
+  const k=b[1]===1?(b[0]===1?"":b[0]===-1?"-":b[0]):"("+qs(b)+")";
+  let t=k+"M";
+  if(!q0(a))t+=(a[0]>0?" + ":" - ")+qs(Q(Math.abs(a[0]),a[1]));
+  return t;
+}
+const nm=s=>s.replace(/^([a-z])(\d+)$/,"$1<sub>$2</sub>");
+function pq(s){
+  s=String(s).trim().replace(",",".");if(s==="")throw 0;
+  if(s.includes("/")){const[a,b]=s.split("/").map(Number);if(isNaN(a)||!b)throw 0;return Q(a,b)}
+  const v=Number(s);if(isNaN(v))throw 0;
+  const k=(s.split(".")[1]||"").length;return Q(Math.round(v*10**k),10**k);
+}
+const term=(q,v,first)=>{if(q0(q))return"";const a=Q(Math.abs(q[0]),q[1]);const c=qs(a)==="1"?"":qs(a);
+  return(first?(q[0]<0?"-":""):(q[0]<0?" - ":" + "))+c+nm(v)};
+const lin=(row,pre)=>{let s="",f=true;row.forEach((q,j)=>{const t=term(q,pre+(j+1),f);if(t){s+=t;f=false}});return s||"0"};
+
+/* ---- Forma ---- */
+const $=id=>document.getElementById(id);
+const EX={n:2,m:3,mx:"min",c:["4","1"],A:[["3","1"],["4","3"],["1","2"]],sg:["=",">=","<="],b:["3","6","4"]};
+function build(p){
+  const n=+$("n").value,m=+$("m").value;
+  const g=$("form");g.style.gridTemplateColumns=`auto repeat(${n},64px) 58px 64px`;
+  let h="<span>Z =</span>";
+  for(let j=0;j<n;j++)h+=`<input class="n" data-c="${j}" value="${p?.c?.[j]??""}" aria-label="c${j+1}">`;
+  h+="<span></span><span></span>";
+  for(let i=0;i<m;i++){
+    h+=`<span>${i+1})</span>`;
+    for(let j=0;j<n;j++)h+=`<input class="n" data-a="${i}-${j}" value="${p?.A?.[i]?.[j]??""}" aria-label="a${i+1}${j+1}">`;
+    const s=p?.sg?.[i]??"<=";
+    h+=`<select data-s="${i}">${["<=",">=","="].map(o=>`<option value="${o}"${o===s?" selected":""}>${o==="<="?"≤":o===">="?"≥":"="}</option>`).join("")}</select>`;
+    h+=`<input class="n" data-b="${i}" value="${p?.b?.[i]??""}" aria-label="b${i+1}">`;
+  }
+  g.innerHTML=h;
+}
+function read(){
+  const n=+$("n").value,m=+$("m").value,q=s=>document.querySelector(s);
+  try{
+    return{n,m,max:$("mx").value==="max",
+      c:[...Array(n)].map((_,j)=>pq(q(`[data-c="${j}"]`).value)),
+      A:[...Array(m)].map((_,i)=>[...Array(n)].map((_,j)=>pq(q(`[data-a="${i}-${j}"]`).value))),
+      sg:[...Array(m)].map((_,i)=>q(`[data-s="${i}"]`).value),
+      b:[...Array(m)].map((_,i)=>pq(q(`[data-b="${i}"]`).value))};
+  }catch(e){return null}
+}
+
+/* ---- Jadval chizish ---- */
+function tbl(S,names,cost,m,mark){
+  let h=`<div class="w"><table><tr><th>Bazis</th><th>c<sub>B</sub></th>`+names.map((x,j)=>`<th class="${j===S.e?"ec":""}">${nm(x)}</th>`).join("")+`<th>b</th>${mark?"<th>θ</th>":""}</tr>`;
+  h+=`<tr><th></th><th>c<sub>j</sub></th>`+cost.map((c,j)=>`<th class="${j===S.e?"ec":""}">${mstr(c)}</th>`).join("")+`<th></th>${mark?"<th></th>":""}</tr>`;
+  for(let i=0;i<m;i++){
+    h+=`<tr class="${i===S.r?"lr":""}"><td>${nm(names[S.basis[i]])}</td><td>${mstr(cost[S.basis[i]])}</td>`;
+    h+=S.A[i].map((v,j)=>`<td class="${i===S.r&&j===S.e?"p":j===S.e?"ec":""}">${qs(v)}</td>`).join("");
+    h+=`<td>${qs(S.b[i])}</td>${mark?`<td>${S.th[i]?qs(S.th[i]):"—"}</td>`:""}</tr>`;
+  }
+  h+=`<tr class="d"><td colspan="2">Δ<sub>j</sub> = z<sub>j</sub> − c<sub>j</sub></td>`+S.D.map((d,j)=>`<td class="${j===S.e?"ec":""}">${mstr(d)}</td>`).join("")+`<td>${mstr(S.Z)}</td>${mark?"<td></td>":""}</tr></table></div>`;
+  return h;
+}
+
+/* ---- Yechish ---- */
+function solve(P){
+  const{n,m}=P,out=[];
+  const step=(t,b)=>out.push(`<div class="step"><h2>${t}</h2>${b}</div>`);
+  const sgs={"<=":"≤",">=":"≥","=":"="};
+  step("1-qadam. Masala",`<p>Z = ${lin(P.c,"x")} → ${P.max?"max":"min"}</p><p>${P.A.map((r,i)=>lin(r,"x")+` ${sgs[P.sg[i]]} `+qs(P.b[i])).join("<br>")}<br>${[...Array(n)].map((_,j)=>nm("x"+(j+1))).join(", ")} ≥ 0</p>`);
+  let c=P.max?P.c.slice():P.c.map(qn),A=P.A.map(r=>r.slice()),b=P.b.slice(),sg=P.sg.slice(),nt=[];
+  if(!P.max)nt.push(`Masala min turida, shuning uchun Z′ = −Z = ${lin(c,"x")} → max koʻrinishiga keltiriladi (oxirida Z = −Z′).`);
+  for(let i=0;i<m;i++)if(b[i][0]<0){A[i]=A[i].map(qn);b[i]=qn(b[i]);sg[i]={"<=":">=",">=":"<=","=":"="}[sg[i]];nt.push(`${i+1}-cheklovning oʻng tomoni manfiy edi: ikkala tomon −1 ga koʻpaytirildi, ishora teskarilandi.`)}
+  const names=[...Array(n)].map((_,j)=>"x"+(j+1)),cost=c.map(x=>[x,Z0]),basis=[];
+  const add=(nmx,cs)=>{names.push(nmx);cost.push(cs);A.forEach(r=>r.push(Q(0)));return names.length-1};
+  const art=[];
+  for(let i=0;i<m;i++){
+    if(sg[i]==="<="){const j=add("s"+(i+1),[Z0,Z0]);A[i][j]=Q(1);basis[i]=j;nt.push(`${i+1}-cheklov (≤): qoʻshimcha oʻzgaruvchi ${nm("s"+(i+1))} qoʻshildi, u bazisga kiradi.`)}
+    else{
+      if(sg[i]===">="){const j=add("s"+(i+1),[Z0,Z0]);A[i][j]=Q(-1);nt.push(`${i+1}-cheklov (≥): ${nm("s"+(i+1))} ayriladi.`)}
+      const k=add("a"+(i+1),[Z0,Q(-1)]);A[i][k]=Q(1);basis[i]=k;art.push(k);
+      nt.push(`${i+1}-cheklovga sunʼiy oʻzgaruvchi ${nm("a"+(i+1))} qoʻshildi (maqsad funksiyasida koeffitsiyenti −M), u bazisga kiradi.`);
+    }
+  }
+  step("2-qadam. Kanonik shakl",`<p>${nt.join("<br>")}</p><p>M — yetarlicha katta musbat son. Bazis: ${basis.map(j=>nm(names[j])).join(", ")}.</p>`);
+  let it=0,res=null;
+  while(it<50){
+    const N=names.length,D=[];
+    for(let j=0;j<N;j++){let s=[Z0,Z0];for(let i=0;i<m;i++)s=ma(s,ms(cost[basis[i]],A[i][j]));D.push(ma(s,mneg(cost[j])))}
+    let Z=[Z0,Z0];for(let i=0;i<m;i++)Z=ma(Z,ms(cost[basis[i]],b[i]));
+    let e=-1;D.forEach((d,j)=>{if(mc(d,[Z0,Z0])<0&&(e<0||mc(d,D[e])<0))e=j});
+    const S={A:A.map(r=>r.slice()),b:b.slice(),basis:basis.slice(),D,Z,e,r:-1,th:[]};
+    const T=`${it+3}-qadam. ${it===0?"Boshlangʻich":it+"-iteratsiya"} jadvali`;
+    if(e<0){
+      step(T,tbl(S,names,cost,m,false)+`<p>Barcha Δ<sub>j</sub> ≥ 0 — optimallik sharti bajarildi, hisoblash toʻxtatiladi.</p>`);
+      res={S};break;
+    }
+    let r=-1;
+    for(let i=0;i<m;i++)if(A[i][e][0]>0){const t=qd(b[i],A[i][e]);S.th[i]=t;if(r<0||qc(t,S.th[r])<0)r=i}
+    S.r=r;
+    let tx=`<p><b>Kiruvchi oʻzgaruvchi:</b> ${nm(names[e])} — Δ<sub>j</sub> lar ichida eng kichigi (${mstr(D[e])}).</p>`;
+    if(r<0){step(T,tbl(S,names,cost,m,true)+tx+`<p class="er">${nm(names[e])} ustunida musbat element yoʻq — maqsad funksiyasi chegaralanmagan.</p>`);res={unb:true};break}
+    tx+=`<p><b>Chiquvchi oʻzgaruvchi:</b> ${nm(names[basis[r]])} — θ = b<sub>i</sub>/a<sub>i${nm(names[e])}</sub> nisbatlarning eng kichigi (${qs(S.th[r])}). Hal qiluvchi element: ${qs(A[r][e])}.</p>`;
+    step(T,tbl(S,names,cost,m,true)+tx);
+    const pv=A[r][e];A[r]=A[r].map(v=>qd(v,pv));b[r]=qd(b[r],pv);
+    for(let i=0;i<m;i++)if(i!==r&&!q0(A[i][e])){const f=A[i][e];A[i]=A[i].map((v,j)=>qa(v,qn(qm(f,A[r][j]))));b[i]=qa(b[i],qn(qm(f,b[r])))}
+    basis[r]=e;it++;
+  }
+  /* Javob */
+  let ans;
+  if(res?.unb)ans=`<p class="er ans"><b>Javob:</b> maqsad funksiyasi chegaralanmagan, optimal yechim mavjud emas.</p>`;
+  else if(!res)ans=`<p class="er">Iteratsiyalar soni juda koʻp (sikl ehtimoli).</p>`;
+  else{
+    const S=res.S,bad=basis.some((j,i)=>art.includes(j)&&!q0(S.b[i]));
+    if(bad)ans=`<p class="er ans"><b>Javob:</b> optimal jadvalda sunʼiy oʻzgaruvchi noldan farqli qiymat bilan bazisda qoldi — cheklovlar oʻzaro zid, masala yechimga ega emas.</p>`;
+    else{
+      const x=[...Array(n)].map(()=>Q(0));basis.forEach((j,i)=>{if(j<n)x[j]=S.b[i]});
+      const zv=P.max?S.Z[0]:qn(S.Z[0]);
+      const alt=names.some((_,j)=>!art.includes(j)&&!basis.includes(j)&&q0(S.D[j][0])&&q0(S.D[j][1]));
+      ans=`<p class="ok ans"><b>Javob:</b> ${x.map((v,j)=>nm("x"+(j+1))+" = "+qs(v)).join(", ")}; Z<sub>${P.max?"max":"min"}</sub> = ${qs(zv)}${zv[1]!==1?" ≈ "+(zv[0]/zv[1]).toFixed(4):""}</p>`+
+        (P.max?"":`<p>Z′<sub>max</sub> = ${qs(S.Z[0])}, shuning uchun Z<sub>min</sub> = −Z′<sub>max</sub> = ${qs(zv)}.</p>`)+
+        (alt?`<p>Eslatma: bazisga kirmagan oʻzgaruvchi uchun Δ<sub>j</sub> = 0 — muqobil optimal yechim mavjud.</p>`:"");
+    }
+  }
+  step("Natija",ans);
+  return out.join("");
+}
+
+$("mk").onclick=()=>build();
+$("ex").onclick=()=>{$("n").value=EX.n;$("m").value=EX.m;$("mx").value=EX.mx;build(EX)};
+$("go").onclick=()=>{
+  const P=read();$("err").textContent="";
+  if(!P){$("err").textContent="Barcha kataklarni toʻgʻri toʻldiring.";return}
+  $("out").innerHTML=solve(P);$("out").scrollIntoView({behavior:"smooth"});
+};
+$("ex").onclick();
+</script>
+</body>
+</html>
