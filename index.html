@@ -33,6 +33,19 @@ tr.d td{font-weight:600;border-top:2px solid var(--fg)}
 .ok{color:var(--ok)}.er{color:var(--er)}
 .ans{font-size:1.1rem}
 sub{font-size:.7em}
+[hidden]{display:none!important}
+input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--col)}
+input,select{transition:box-shadow .15s,border-color .15s}
+#live{margin:10px 0;padding:8px 12px;border-left:3px solid var(--ac);font-size:.95rem}
+.step{scroll-margin-top:12px}
+.step.in{animation:in .45s ease both}
+.step.in td.p{animation:pv 1s .5s ease 2}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pv{50%{box-shadow:inset 0 0 0 3px var(--ac)}}
+@media(prefers-reduced-motion:reduce){.step.in,.step.in td.p{animation:none}}
+#ctl{position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--bd)}
+ol.c{margin:.3em 0;padding-left:1.3em}ol.c li{margin:.6em 0}
+.arr{color:var(--mut)}
 </style>
 </head>
 <body>
@@ -45,14 +58,15 @@ sub{font-size:.7em}
 <label>Oʻzgaruvchilar soni <input id="n" class="n" type="number" min="1" max="8" value="2"></label>
 <label>Cheklovlar soni <input id="m" class="n" type="number" min="1" max="8" value="3"></label>
 <label>Maqsad <select id="mx"><option value="min">Z → min</option><option value="max">Z → max</option></select></label>
-<button class="g" id="mk">Jadvalni yangilash</button>
 <button class="g" id="ex">Namuna</button>
 </div>
 <div id="form" class="grid"></div>
+<div id="live" aria-live="polite"></div>
 <div class="row"><button id="go">Yechish</button><span id="err" class="er"></span></div>
-<p class="s">Koeffitsiyentlarni butun, kasr (1/2) yoki oʻnli (0.5) koʻrinishda yozing.</p>
+<p class="s">Katakdan katakka: Enter, Tab, Space yoki →; orqaga: Shift+Enter yoki ←; qatorlar boʻyicha: ↑ ↓. Ishora katagida &lt; &gt; = tugmalarini bosing (&lt; — ≤, &gt; — ≥). Oxirgi katakda Enter — yechish. Sonlar: butun, kasr (1/2) yoki oʻnli (0.5).</p>
 </section>
 <div id="out"></div>
+<div id="ctl" class="row" hidden><button id="nx">Keyingi qadam</button><button class="g" id="all">Hammasini koʻrsat</button><button class="g" id="auto">Avtomatik</button><span id="cnt" class="s"></span></div>
 </main>
 <script>
 /* ---- Kasrlar: [surat, maxraj] ---- */
@@ -87,7 +101,8 @@ function pq(s){
 }
 const term=(q,v,first)=>{if(q0(q))return"";const a=Q(Math.abs(q[0]),q[1]);const c=qs(a)==="1"?"":qs(a);
   return(first?(q[0]<0?"-":""):(q[0]<0?" - ":" + "))+c+nm(v)};
-const lin=(row,pre)=>{let s="",f=true;row.forEach((q,j)=>{const t=term(q,pre+(j+1),f);if(t){s+=t;f=false}});return s||"0"};
+const linN=(row,nn)=>{let s="",f=true;row.forEach((q,j)=>{const t=term(q,nn[j],f);if(t){s+=t;f=false}});return s||"0"};
+const lin=(row,pre)=>linN(row,row.map((_,j)=>pre+(j+1)));
 
 /* ---- Forma ---- */
 const $=id=>document.getElementById(id);
@@ -105,16 +120,16 @@ function build(p){
     h+=`<select data-s="${i}">${["<=",">=","="].map(o=>`<option value="${o}"${o===s?" selected":""}>${o==="<="?"≤":o===">="?"≥":"="}</option>`).join("")}</select>`;
     h+=`<input class="n" data-b="${i}" value="${p?.b?.[i]??""}" aria-label="b${i+1}">`;
   }
-  g.innerHTML=h;
+  g.innerHTML=h;live();
 }
-function read(){
+function read(len){const pz=len?(x=>{try{return pq(x)}catch(e){return Q(0)}}):pq;
   const n=+$("n").value,m=+$("m").value,q=s=>document.querySelector(s);
   try{
     return{n,m,max:$("mx").value==="max",
-      c:[...Array(n)].map((_,j)=>pq(q(`[data-c="${j}"]`).value)),
-      A:[...Array(m)].map((_,i)=>[...Array(n)].map((_,j)=>pq(q(`[data-a="${i}-${j}"]`).value))),
+      c:[...Array(n)].map((_,j)=>pz(q(`[data-c="${j}"]`).value)),
+      A:[...Array(m)].map((_,i)=>[...Array(n)].map((_,j)=>pz(q(`[data-a="${i}-${j}"]`).value))),
       sg:[...Array(m)].map((_,i)=>q(`[data-s="${i}"]`).value),
-      b:[...Array(m)].map((_,i)=>pq(q(`[data-b="${i}"]`).value))};
+      b:[...Array(m)].map((_,i)=>pz(q(`[data-b="${i}"]`).value))};
   }catch(e){return null}
 }
 
@@ -137,21 +152,24 @@ function solve(P){
   const step=(t,b)=>out.push(`<div class="step"><h2>${t}</h2>${b}</div>`);
   const sgs={"<=":"≤",">=":"≥","=":"="};
   step("1-qadam. Masala",`<p>Z = ${lin(P.c,"x")} → ${P.max?"max":"min"}</p><p>${P.A.map((r,i)=>lin(r,"x")+` ${sgs[P.sg[i]]} `+qs(P.b[i])).join("<br>")}<br>${[...Array(n)].map((_,j)=>nm("x"+(j+1))).join(", ")} ≥ 0</p>`);
-  let c=P.max?P.c.slice():P.c.map(qn),A=P.A.map(r=>r.slice()),b=P.b.slice(),sg=P.sg.slice(),nt=[];
-  if(!P.max)nt.push(`Masala min turida, shuning uchun Z′ = −Z = ${lin(c,"x")} → max koʻrinishiga keltiriladi (oxirida Z = −Z′).`);
-  for(let i=0;i<m;i++)if(b[i][0]<0){A[i]=A[i].map(qn);b[i]=qn(b[i]);sg[i]={"<=":">=",">=":"<=","=":"="}[sg[i]];nt.push(`${i+1}-cheklovning oʻng tomoni manfiy edi: ikkala tomon −1 ga koʻpaytirildi, ishora teskarilandi.`)}
+  let c=P.max?P.c.slice():P.c.map(qn),A=P.A.map(r=>r.slice()),b=P.b.slice(),sg=P.sg.slice();
+  const L=[],fl=[],ex=[];
+  if(!P.max)L.push(`<li><b>Maqsad.</b> Z → min ni max ga keltiramiz: Z′ = −Z = ${lin(c,"x")} → max (oxirida Z = −Z′).</li>`);
+  for(let i=0;i<m;i++)if(b[i][0]<0){A[i]=A[i].map(qn);b[i]=qn(b[i]);sg[i]={"<=":">=",">=":"<=","=":"="}[sg[i]];fl[i]=`<span class="arr">(−1 ga koʻpaytiramiz, b ≥ 0 boʻlsin)</span> ${lin(A[i],"x")} ${sgs[sg[i]]} ${qs(b[i])}`}
   const names=[...Array(n)].map((_,j)=>"x"+(j+1)),cost=c.map(x=>[x,Z0]),basis=[];
   const add=(nmx,cs)=>{names.push(nmx);cost.push(cs);A.forEach(r=>r.push(Q(0)));return names.length-1};
   const art=[];
   for(let i=0;i<m;i++){
-    if(sg[i]==="<="){const j=add("s"+(i+1),[Z0,Z0]);A[i][j]=Q(1);basis[i]=j;nt.push(`${i+1}-cheklov (≤): qoʻshimcha oʻzgaruvchi ${nm("s"+(i+1))} qoʻshildi, u bazisga kiradi.`)}
+    if(sg[i]==="<="){const j=add("s"+(i+1),[Z0,Z0]);A[i][j]=Q(1);basis[i]=j;ex[i]=`≤ ni tenglikka aylantirish uchun ${nm("s"+(i+1))} ≥ 0 qoʻshamiz`}
     else{
-      if(sg[i]===">="){const j=add("s"+(i+1),[Z0,Z0]);A[i][j]=Q(-1);nt.push(`${i+1}-cheklov (≥): ${nm("s"+(i+1))} ayriladi.`)}
+      let t="";
+      if(sg[i]===">="){const j=add("s"+(i+1),[Z0,Z0]);A[i][j]=Q(-1);t=`≥ dan qutulish uchun ${nm("s"+(i+1))} ≥ 0 ayiramiz, `}
       const k=add("a"+(i+1),[Z0,Q(-1)]);A[i][k]=Q(1);basis[i]=k;art.push(k);
-      nt.push(`${i+1}-cheklovga sunʼiy oʻzgaruvchi ${nm("a"+(i+1))} qoʻshildi (maqsad funksiyasida koeffitsiyenti −M), u bazisga kiradi.`);
+      ex[i]=t+`bazis hosil qilish uchun sunʼiy ${nm("a"+(i+1))} ≥ 0 qoʻshamiz`;
     }
   }
-  step("2-qadam. Kanonik shakl",`<p>${nt.join("<br>")}</p><p>M — yetarlicha katta musbat son. Bazis: ${basis.map(j=>nm(names[j])).join(", ")}.</p>`);
+  step("2-qadam. Kanonik shaklga keltirish",`<ol class="c">${L.join("")}${[...Array(m)].map((_,i)=>`<li><b>${i+1}-cheklov.</b> ${lin(P.A[i],"x")} ${sgs[P.sg[i]]} ${qs(P.b[i])}${fl[i]?` <span class="arr">→</span> ${fl[i]}`:""} <span class="arr">→</span> ${ex[i]}:<br>${linN(A[i],names)} = ${qs(b[i])}</li>`).join("")}</ol>`);
+  step("3-qadam. Kanonik shakl",`<p>${P.max?"Z":"Z′"} = ${linN(cost.map(x=>x[0]),names)}${art.map(k=>" − M·"+nm(names[k])).join("")} → max</p><p>${A.map((r,i)=>linN(r,names)+" = "+qs(b[i])).join("<br>")}<br>${names.map(x=>nm(x)).join(", ")} ≥ 0</p><p>M — yetarlicha katta musbat son. Boshlangʻich bazis: ${basis.map(j=>nm(names[j])).join(", ")}; c<sub>B</sub> = ${basis.map(j=>mstr(cost[j])).join(", ")}.</p>`);
   let it=0,res=null;
   while(it<50){
     const N=names.length,D=[];
@@ -159,7 +177,7 @@ function solve(P){
     let Z=[Z0,Z0];for(let i=0;i<m;i++)Z=ma(Z,ms(cost[basis[i]],b[i]));
     let e=-1;D.forEach((d,j)=>{if(mc(d,[Z0,Z0])<0&&(e<0||mc(d,D[e])<0))e=j});
     const S={A:A.map(r=>r.slice()),b:b.slice(),basis:basis.slice(),D,Z,e,r:-1,th:[]};
-    const T=`${it+3}-qadam. ${it===0?"Boshlangʻich":it+"-iteratsiya"} jadvali`;
+    const T=`${it+4}-qadam. ${it===0?"Boshlangʻich":it+"-iteratsiya"} jadvali`;
     if(e<0){
       step(T,tbl(S,names,cost,m,false)+`<p>Barcha Δ<sub>j</sub> ≥ 0 — optimallik sharti bajarildi, hisoblash toʻxtatiladi.</p>`);
       res={S};break;
@@ -169,7 +187,7 @@ function solve(P){
     S.r=r;
     let tx=`<p><b>Kiruvchi oʻzgaruvchi:</b> ${nm(names[e])} — Δ<sub>j</sub> lar ichida eng kichigi (${mstr(D[e])}).</p>`;
     if(r<0){step(T,tbl(S,names,cost,m,true)+tx+`<p class="er">${nm(names[e])} ustunida musbat element yoʻq — maqsad funksiyasi chegaralanmagan.</p>`);res={unb:true};break}
-    tx+=`<p><b>Chiquvchi oʻzgaruvchi:</b> ${nm(names[basis[r]])} — θ = b<sub>i</sub>/a<sub>i${nm(names[e])}</sub> nisbatlarning eng kichigi (${qs(S.th[r])}). Hal qiluvchi element: ${qs(A[r][e])}.</p>`;
+    tx+=`<p><b>Chiquvchi oʻzgaruvchi:</b> ${nm(names[basis[r]])} — θ = b<sub>i</sub>/a<sub>i${nm(names[e])}</sub> nisbatlarning eng kichigi (${qs(S.th[r])}). Hal qiluvchi element: ${qs(A[r][e])}.</p><p class="arr">Keyingi jadval: hal qiluvchi qatorni ${qs(A[r][e])} ga boʻlamiz, qolgan qatorlarga R<sub>i</sub> ← R<sub>i</sub> − a<sub>ie</sub>·R<sub>r</sub> amalini qoʻllab, kiruvchi ustunni birlik vektorga keltiramiz.</p>`;
     step(T,tbl(S,names,cost,m,true)+tx);
     const pv=A[r][e];A[r]=A[r].map(v=>qd(v,pv));b[r]=qd(b[r],pv);
     for(let i=0;i<m;i++)if(i!==r&&!q0(A[i][e])){const f=A[i][e];A[i]=A[i].map((v,j)=>qa(v,qn(qm(f,A[r][j]))));b[i]=qa(b[i],qn(qm(f,b[r])))}
@@ -192,15 +210,59 @@ function solve(P){
     }
   }
   step("Natija",ans);
-  return out.join("");
+  return out;
 }
 
-$("mk").onclick=()=>build();
+/*UI*/
+const cells=()=>[...$("form").querySelectorAll("[data-c],[data-a],[data-s],[data-b]")];
+function pos(el){const n=+$("n").value,d=el.dataset;
+  if(d.c!==undefined)return[0,+d.c];
+  if(d.a!==undefined){const[i,j]=d.a.split("-");return[+i+1,+j]}
+  return d.s!==undefined?[+d.s+1,n]:[+d.b+1,n+1]}
+function live(){const P=read(true);if(!P)return;
+  $("live").innerHTML=`Z = ${lin(P.c,"x")} → ${P.max?"max":"min"}<br>`+P.A.map((r,i)=>lin(r,"x")+` ${{"<=":"≤",">=":"≥","=":"="}[P.sg[i]]} `+qs(P.b[i])).join("<br>")}
+function raw(){const q=s=>document.querySelector(s)?.value??"",R=[...Array(8).keys()];
+  return{c:R.map(j=>q(`[data-c="${j}"]`)),A:R.map(i=>R.map(j=>q(`[data-a="${i}-${j}"]`))),sg:R.map(i=>q(`[data-s="${i}"]`)||"<="),b:R.map(i=>q(`[data-b="${i}"]`))}}
+$("form").addEventListener("focusin",e=>{if(e.target.select)e.target.select()});
+$("form").addEventListener("input",live);$("form").addEventListener("change",live);
+$("form").addEventListener("keydown",e=>{
+  const el=e.target;if(!el.matches("input,select"))return;
+  const cs=cells(),i=cs.indexOf(el),[r,k]=pos(el),n=+$("n").value,isIn=el.tagName==="INPUT",key=e.key;let t=null;
+  if(!isIn&&key.length===1&&"<>=".includes(key)){el.value=key==="="?"=":key+"=";live();e.preventDefault();return}
+  if(key==="Enter"||(key===" "&&isIn)){
+    t=e.shiftKey?cs[i-1]:cs[i+1];
+    if(!t&&key==="Enter"&&!e.shiftKey){e.preventDefault();$("go").click();return}
+  }else if(key==="ArrowRight")t=cs[i+1];
+  else if(key==="ArrowLeft")t=cs[i-1];
+  else if(key==="ArrowDown"||key==="ArrowUp"){
+    const rr=r+(key==="ArrowDown"?1:-1);
+    t=cs.find(x=>{const p=pos(x);return p[0]===rr&&p[1]===Math.min(k,rr===0?n-1:n+1)});
+  }
+  if(t){e.preventDefault();t.focus()}else if(key===" "&&isIn)e.preventDefault();
+});
+$("n").onchange=$("m").onchange=()=>build(raw());
+$("mx").onchange=live;
 $("ex").onclick=()=>{$("n").value=EX.n;$("m").value=EX.m;$("mx").value=EX.mx;build(EX)};
+
+let steps=[],shown=0,timer=null;
+const stop=()=>{clearInterval(timer);timer=null;$("auto").textContent="Avtomatik"};
+function nextStep(){
+  if(shown>=steps.length)return stop();
+  const s=steps[shown++];s.hidden=false;s.classList.add("in");
+  s.scrollIntoView({behavior:"smooth",block:"start"});
+  $("cnt").textContent=shown+" / "+steps.length;
+  if(shown>=steps.length){stop();["nx","all","auto"].forEach(id=>$(id).disabled=true)}
+}
+$("nx").onclick=()=>{stop();nextStep()};
+$("all").onclick=()=>{stop();while(shown<steps.length)nextStep()};
+$("auto").onclick=()=>{if(timer)return stop();$("auto").textContent="Toʻxtatish";nextStep();timer=setInterval(nextStep,1800)};
 $("go").onclick=()=>{
-  const P=read();$("err").textContent="";
+  const P=read();$("err").textContent="";stop();
   if(!P){$("err").textContent="Barcha kataklarni toʻgʻri toʻldiring.";return}
-  $("out").innerHTML=solve(P);$("out").scrollIntoView({behavior:"smooth"});
+  $("out").innerHTML=solve(P).join("");
+  steps=[...$("out").children];steps.forEach(x=>x.hidden=true);shown=0;
+  $("ctl").hidden=false;["nx","all","auto"].forEach(id=>$(id).disabled=false);
+  nextStep();
 };
 $("ex").onclick();
 </script>
