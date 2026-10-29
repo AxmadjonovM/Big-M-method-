@@ -5,53 +5,70 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>M-usul — chiziqli dasturlash masalasini yechish</title>
 <style>
-:root{--bg:#f6f8fb;--fg:#14202e;--mut:#5d6b7a;--card:#fff;--bd:#cfd8e3;--ac:#1f4fbf;--hl:#ffe9a6;--col:#e3ecff;--ok:#17703a;--er:#b3261e}
-@media(prefers-color-scheme:dark){:root{--bg:#10161e;--fg:#e6edf5;--mut:#93a1b1;--card:#18212c;--bd:#2e3b4a;--ac:#8fb0ff;--hl:#6b5600;--col:#1f3052;--ok:#6fd08c;--er:#ff8a80}}
+:root{--bg:#eef3f4;--gr:rgba(15,118,110,.09);--fg:#10232b;--mut:#52646d;--card:#fff;--bd:#c9d6da;--ac:#0f766e;--btn:#0f766e;--hl:#fcd34d;--col:#dff3f0;--zr:#f1f6f7;--ok:#12703a;--er:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#0d161a;--gr:rgba(94,234,212,.07);--fg:#e4eef1;--mut:#92a8b0;--card:#142027;--bd:#2a3d46;--ac:#5eead4;--hl:#7a5f00;--col:#173a3a;--zr:#1a2a32;--ok:#6fd08c;--er:#ff8a80}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,"Times New Roman",serif}
-main{max-width:980px;margin:0 auto;padding:20px 16px 60px}
-h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;margin:0 0 .5em}
-p.s{color:var(--mut);margin:0 0 1em}
-section,.step{background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:14px 16px;margin:14px 0}
-.step h2 small{color:var(--mut);font-weight:400}
-label{font-family:system-ui,sans-serif;font-size:.9rem}
-input,select,button{font:inherit;font-family:system-ui,sans-serif;font-size:.95rem;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:5px 7px}
-input.n{width:64px;text-align:center}
-button{cursor:pointer;background:var(--ac);color:#fff;border-color:var(--ac);padding:7px 14px}
-button.g{background:transparent;color:var(--ac)}
+body{margin:0;color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);background-image:linear-gradient(var(--gr) 1px,transparent 1px),linear-gradient(90deg,var(--gr) 1px,transparent 1px);background-size:24px 24px}
+header.top{max-width:980px;margin:0 auto;padding:28px 16px 4px}
+h1{font:700 2rem/1.15 Georgia,"Times New Roman",serif;margin:0;letter-spacing:-.01em}
+h1 i{font-weight:400;color:var(--ac)}
+h2{font:700 1.08rem/1.3 Georgia,serif;margin:0 0 .6em}
+p.s{color:var(--mut);margin:.4em 0 1em;max-width:70ch}
+main{max-width:980px;margin:0 auto;padding:8px 16px 70px}
+section,.step{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--ac);border-radius:3px;padding:16px 18px;margin:16px 0;box-shadow:3px 3px 0 var(--bd)}
+label{font-size:.9rem;color:var(--mut)}
+input,select,button{font:inherit;font-size:.95rem;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:3px;padding:6px 8px}
+input.n{width:64px;text-align:center;font-variant-numeric:tabular-nums}
+button{cursor:pointer;background:var(--btn);color:#fff;border-color:var(--btn);padding:8px 16px;font-weight:600}
+button:hover{filter:brightness(1.1)}
+button.g{background:transparent;color:var(--ac);border-color:var(--ac)}
+button:disabled{opacity:.45;cursor:default}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:6px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:8px 0}
 .grid{display:grid;gap:6px;align-items:center;overflow-x:auto;padding-bottom:4px}
 .w{overflow-x:auto}
-table{border-collapse:collapse;font-family:system-ui,sans-serif;font-size:.9rem;margin:8px 0}
-th,td{border:1px solid var(--bd);padding:4px 9px;text-align:center;white-space:nowrap}
-th{background:var(--bg)}
+table{border-collapse:collapse;font-size:.92rem;margin:10px 0;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--bd);padding:5px 11px;text-align:center;white-space:nowrap}
+th{background:var(--col)}
 td.ec,th.ec{background:var(--col)}
 tr.lr td{background:var(--col)}
 td.p{background:var(--hl);font-weight:700}
-tr.d td{font-weight:600;border-top:2px solid var(--fg)}
+tr.z td{background:var(--zr);border-top:2px solid var(--fg)}
+tr.d td{font-weight:700}
+tr.z td:first-child,tr.d td:first-child{text-align:left;font-weight:600}
+tr.z td.ec,tr.d td.ec{background:var(--col)}
+td.neg{color:var(--er)}
+td.hv{cursor:help;text-decoration:underline dotted var(--mut);text-underline-offset:4px}
+td.Z{font-weight:700;box-shadow:inset 0 0 0 2px var(--ac)}
 .ok{color:var(--ok)}.er{color:var(--er)}
-.ans{font-size:1.1rem}
+.ans{font-size:1.15rem}
 sub{font-size:.7em}
 [hidden]{display:none!important}
 input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--col)}
-input,select{transition:box-shadow .15s,border-color .15s}
-#live{margin:10px 0;padding:8px 12px;border-left:3px solid var(--ac);font-size:.95rem}
+#live{margin:10px 0;padding:8px 12px;border-left:3px solid var(--ac);background:var(--zr);font-family:Georgia,serif}
 .step{scroll-margin-top:12px}
 .step.in{animation:in .45s ease both}
 .step.in td.p{animation:pv 1s .5s ease 2}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes pv{50%{box-shadow:inset 0 0 0 3px var(--ac)}}
 @media(prefers-reduced-motion:reduce){.step.in,.step.in td.p{animation:none}}
-#ctl{position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--bd)}
+#ctl{position:sticky;bottom:0;background:var(--card);padding:10px 14px;border:1px solid var(--bd);border-top:3px solid var(--ac);margin-top:16px}
 ol.c{margin:.3em 0;padding-left:1.3em}ol.c li{margin:.6em 0}
 .arr{color:var(--mut)}
+.calc{background:var(--zr);border-left:3px solid var(--hl);padding:8px 12px;margin:.8em 0;font-family:Georgia,serif;overflow-x:auto}
+.cap{color:var(--mut);font-size:.88rem;margin:.2em 0 .6em}
+details.leg{border:1px solid var(--bd);background:var(--zr);padding:8px 14px;margin:10px 0;border-radius:3px}
+details.leg summary{cursor:pointer;font-weight:600}
+details.leg ul{margin:.6em 0 .2em;padding-left:1.2em}details.leg li{margin:.5em 0}
+.sw{display:inline-block;width:.9em;height:.9em;border:1px solid var(--bd);vertical-align:-.1em;margin-right:.3em}
 </style>
 </head>
 <body>
+<header class="top">
+<h1>M-usul <i>(sunʼiy bazis usuli)</i></h1>
+<p class="s">Chiziqli dasturlash masalasini kiriting — dastur har bir simpleks jadvalni, z<sub>j</sub> va Δ<sub>j</sub> hisobini hamda qarorni qadamma-qadam koʻrsatadi.</p>
+</header>
 <main>
-<h1>M-usul (sunʼiy bazis usuli)</h1>
-<p class="s">Chiziqli dasturlash masalasini kiriting — dastur har bir simpleks jadvalni va qarorni qadamma-qadam koʻrsatadi.</p>
 
 <section>
 <div class="row">
@@ -133,17 +150,32 @@ function read(len){const pz=len?(x=>{try{return pq(x)}catch(e){return Q(0)}}):pq
   }catch(e){return null}
 }
 
+/* ---- z_j hisobi: c_B·a_ij yigʻindisi ---- */
+const terms=(S,cost,j)=>S.basis.map((bj,i)=>`(${mstr(cost[bj])})·${qs(S.A[i][j])}`).join(" + ");
+const tip=(S,names,cost,j)=>`z_${names[j]} = ${terms(S,cost,j)} = ${mstr(S.z[j])};  Δ_${names[j]} = z_${names[j]} − c_${names[j]} = ${mstr(S.z[j])} − (${mstr(cost[j])}) = ${mstr(S.D[j])}`;
+const calcH=(S,names,cost,j)=>`<div class="calc">z<sub>${nm(names[j])}</sub> = Σ c<sub>B</sub>·a<sub>i${nm(names[j])}</sub> = ${terms(S,cost,j)} = ${mstr(S.z[j])}<br>Δ<sub>${nm(names[j])}</sub> = z<sub>${nm(names[j])}</sub> − c<sub>${nm(names[j])}</sub> = ${mstr(S.z[j])} − (${mstr(cost[j])}) = <b>${mstr(S.D[j])}</b></div>`;
+const LEG=`<details class="leg" open><summary>Jadval qanday oʻqiladi?</summary><ul>
+<li><b>Bazis</b> — hozir bazisda turgan oʻzgaruvchilar (har qatorga bittadan). <b>b</b> ustuni — ularning qiymatlari.</li>
+<li><b>c<sub>j</sub></b> — har bir ustun oʻzgaruvchisining maqsad funksiyadagi koeffitsiyenti (sunʼiy a<sub>i</sub> uchun −M). <b>c<sub>B</sub></b> — bazis oʻzgaruvchilarning c<sub>j</sub> qiymatlari.</li>
+<li><b>z<sub>j</sub></b> — jadval <u>pastidagi birinchi qator</u>, har ustun tagida. Hisoblash: c<sub>B</sub> ustunidagi sonlarni shu ustun elementlariga koʻpaytirib qoʻshamiz: z<sub>j</sub> = Σ c<sub>B,i</sub>·a<sub>ij</sub>.</li>
+<li><b>Δ<sub>j</sub> = z<sub>j</sub> − c<sub>j</sub></b> — z<sub>j</sub> qatori ostidagi qator (baho). Max masalada manfiy Δ<sub>j</sub> yechimni yaxshilash mumkinligini bildiradi; hammasi ≥ 0 boʻlsa — optimal.</li>
+<li><b>Z</b> — oʻng pastki katak (ramkada): Z = Σ c<sub>B,i</sub>·b<sub>i</sub>, maqsad funksiyaning joriy qiymati.</li>
+<li><span class="sw" style="background:var(--col)"></span>kiruvchi ustun va chiquvchi qator, <span class="sw" style="background:var(--hl)"></span>hal qiluvchi element. z<sub>j</sub> va Δ<sub>j</sub> katagi ustiga sichqoncha olib borsangiz (telefonda bossangiz) hisob-kitob chiqadi.</li>
+</ul></details>`;
+
 /* ---- Jadval chizish ---- */
-function tbl(S,names,cost,m,mark){
-  let h=`<div class="w"><table><tr><th>Bazis</th><th>c<sub>B</sub></th>`+names.map((x,j)=>`<th class="${j===S.e?"ec":""}">${nm(x)}</th>`).join("")+`<th>b</th>${mark?"<th>θ</th>":""}</tr>`;
-  h+=`<tr><th></th><th>c<sub>j</sub></th>`+cost.map((c,j)=>`<th class="${j===S.e?"ec":""}">${mstr(c)}</th>`).join("")+`<th></th>${mark?"<th></th>":""}</tr>`;
+function tbl(S,names,cost,m,mark,leg){
+  const ec=j=>j===S.e?"ec":"",x=mark?"<td></td>":"";
+  let h=(leg?LEG:"")+`<div class="w"><table><tr><th>Bazis</th><th>c<sub>B</sub></th>`+names.map((x,j)=>`<th class="${ec(j)}">${nm(x)}</th>`).join("")+`<th>b</th>${mark?"<th>θ</th>":""}</tr>`;
+  h+=`<tr><th></th><th>c<sub>j</sub></th>`+cost.map((c,j)=>`<th class="${ec(j)}">${mstr(c)}</th>`).join("")+`<th></th>${mark?"<th></th>":""}</tr>`;
   for(let i=0;i<m;i++){
     h+=`<tr class="${i===S.r?"lr":""}"><td>${nm(names[S.basis[i]])}</td><td>${mstr(cost[S.basis[i]])}</td>`;
-    h+=S.A[i].map((v,j)=>`<td class="${i===S.r&&j===S.e?"p":j===S.e?"ec":""}">${qs(v)}</td>`).join("");
+    h+=S.A[i].map((v,j)=>`<td class="${i===S.r&&j===S.e?"p":ec(j)}">${qs(v)}</td>`).join("");
     h+=`<td>${qs(S.b[i])}</td>${mark?`<td>${S.th[i]?qs(S.th[i]):"—"}</td>`:""}</tr>`;
   }
-  h+=`<tr class="d"><td colspan="2">Δ<sub>j</sub> = z<sub>j</sub> − c<sub>j</sub></td>`+S.D.map((d,j)=>`<td class="${j===S.e?"ec":""}">${mstr(d)}</td>`).join("")+`<td>${mstr(S.Z)}</td>${mark?"<td></td>":""}</tr></table></div>`;
-  return h;
+  h+=`<tr class="z"><td colspan="2">z<sub>j</sub> = Σ c<sub>B</sub>·a<sub>ij</sub></td>`+S.z.map((v,j)=>`<td class="hv ${ec(j)}" title="${tip(S,names,cost,j)}">${mstr(v)}</td>`).join("")+`<td class="Z">${mstr(S.Z)}</td>${x}</tr>`;
+  h+=`<tr class="d"><td colspan="2">Δ<sub>j</sub> = z<sub>j</sub> − c<sub>j</sub></td>`+S.D.map((d,j)=>`<td class="hv ${ec(j)} ${mc(d,[Z0,Z0])<0?"neg":""}" title="${tip(S,names,cost,j)}">${mstr(d)}</td>`).join("")+`<td>${mstr(S.Z)}</td>${x}</tr></table></div>`;
+  return h+`<p class="cap">z<sub>j</sub> — c<sub>B</sub> ustuni va j-ustun elementlari koʻpaytmalarining yigʻindisi; Δ<sub>j</sub> = z<sub>j</sub> − c<sub>j</sub>. Qizil Δ<sub>j</sub> — manfiy.</p>`;
 }
 
 /* ---- Yechish ---- */
@@ -172,23 +204,23 @@ function solve(P){
   step("3-qadam. Kanonik shakl",`<p>${P.max?"Z":"Z′"} = ${linN(cost.map(x=>x[0]),names)}${art.map(k=>" − M·"+nm(names[k])).join("")} → max</p><p>${A.map((r,i)=>linN(r,names)+" = "+qs(b[i])).join("<br>")}<br>${names.map(x=>nm(x)).join(", ")} ≥ 0</p><p>M — yetarlicha katta musbat son. Boshlangʻich bazis: ${basis.map(j=>nm(names[j])).join(", ")}; c<sub>B</sub> = ${basis.map(j=>mstr(cost[j])).join(", ")}.</p>`);
   let it=0,res=null;
   while(it<50){
-    const N=names.length,D=[];
-    for(let j=0;j<N;j++){let s=[Z0,Z0];for(let i=0;i<m;i++)s=ma(s,ms(cost[basis[i]],A[i][j]));D.push(ma(s,mneg(cost[j])))}
+    const N=names.length,D=[],z=[];
+    for(let j=0;j<N;j++){let s=[Z0,Z0];for(let i=0;i<m;i++)s=ma(s,ms(cost[basis[i]],A[i][j]));z.push(s);D.push(ma(s,mneg(cost[j])))}
     let Z=[Z0,Z0];for(let i=0;i<m;i++)Z=ma(Z,ms(cost[basis[i]],b[i]));
     let e=-1;D.forEach((d,j)=>{if(mc(d,[Z0,Z0])<0&&(e<0||mc(d,D[e])<0))e=j});
-    const S={A:A.map(r=>r.slice()),b:b.slice(),basis:basis.slice(),D,Z,e,r:-1,th:[]};
+    const S={A:A.map(r=>r.slice()),b:b.slice(),basis:basis.slice(),D,z,Z,e,r:-1,th:[]};
     const T=`${it+4}-qadam. ${it===0?"Boshlangʻich":it+"-iteratsiya"} jadvali`;
     if(e<0){
-      step(T,tbl(S,names,cost,m,false)+`<p>Barcha Δ<sub>j</sub> ≥ 0 — optimallik sharti bajarildi, hisoblash toʻxtatiladi.</p>`);
+      step(T,tbl(S,names,cost,m,false,it===0)+`<p>Barcha Δ<sub>j</sub> ≥ 0 — optimallik sharti bajarildi, hisoblash toʻxtatiladi.</p>`);
       res={S};break;
     }
     let r=-1;
     for(let i=0;i<m;i++)if(A[i][e][0]>0){const t=qd(b[i],A[i][e]);S.th[i]=t;if(r<0||qc(t,S.th[r])<0)r=i}
     S.r=r;
-    let tx=`<p><b>Kiruvchi oʻzgaruvchi:</b> ${nm(names[e])} — Δ<sub>j</sub> lar ichida eng kichigi (${mstr(D[e])}).</p>`;
-    if(r<0){step(T,tbl(S,names,cost,m,true)+tx+`<p class="er">${nm(names[e])} ustunida musbat element yoʻq — maqsad funksiyasi chegaralanmagan.</p>`);res={unb:true};break}
+    let tx=`<p><b>Kiruvchi oʻzgaruvchi:</b> ${nm(names[e])} — Δ<sub>j</sub> lar ichida eng kichigi (${mstr(D[e])}). Uning hisobi:</p>`+calcH(S,names,cost,e);
+    if(r<0){step(T,tbl(S,names,cost,m,true,it===0)+tx+`<p class="er">${nm(names[e])} ustunida musbat element yoʻq — maqsad funksiyasi chegaralanmagan.</p>`);res={unb:true};break}
     tx+=`<p><b>Chiquvchi oʻzgaruvchi:</b> ${nm(names[basis[r]])} — θ = b<sub>i</sub>/a<sub>i${nm(names[e])}</sub> nisbatlarning eng kichigi (${qs(S.th[r])}). Hal qiluvchi element: ${qs(A[r][e])}.</p><p class="arr">Keyingi jadval: hal qiluvchi qatorni ${qs(A[r][e])} ga boʻlamiz, qolgan qatorlarga R<sub>i</sub> ← R<sub>i</sub> − a<sub>ie</sub>·R<sub>r</sub> amalini qoʻllab, kiruvchi ustunni birlik vektorga keltiramiz.</p>`;
-    step(T,tbl(S,names,cost,m,true)+tx);
+    step(T,tbl(S,names,cost,m,true,it===0)+tx);
     const pv=A[r][e];A[r]=A[r].map(v=>qd(v,pv));b[r]=qd(b[r],pv);
     for(let i=0;i<m;i++)if(i!==r&&!q0(A[i][e])){const f=A[i][e];A[i]=A[i].map((v,j)=>qa(v,qn(qm(f,A[r][j]))));b[i]=qa(b[i],qn(qm(f,b[r])))}
     basis[r]=e;it++;
